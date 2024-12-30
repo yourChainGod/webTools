@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="号多多工具集">
+    <title>号多多工具集</title>
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- 主题切换按钮 -->
+    <button onclick="toggleTheme()" 
+            class="fixed top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-gray-700/80 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
+            title="切换主题">
+        <span class="dark:hidden">🌙</span>
+        <span class="hidden dark:inline">☀️</span>
+    </button>
+
+    <div class="container mx-auto px-6 py-12">
+        <h1 class="text-4xl font-bold text-center mb-2 text-primary">号多多工具集</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-8">
+            <a href="https://hdd.cm" target="_blank" class="text-primary hover:underline">hdd.cm 推特低至2毛</a>
+        </p>
+        
+        <!-- 选项卡导航 -->
+        <div class="flex justify-center border-b border-gray-200 dark:border-gray-700 mb-8 gap-2" id="tabs">
+            <button class="px-8 py-3 text-gray-600 dark:text-gray-300 hover:text-primary active-tab" data-tab="tool1">文本转换</button>
+            <button class="px-8 py-3 text-gray-600 dark:text-gray-300 hover:text-primary" data-tab="tool2">文本合并</button>
+            <button class="px-8 py-3 text-gray-600 dark:text-gray-300 hover:text-primary" data-tab="tool3">文本打乱</button>
+            <button class="px-8 py-3 text-gray-600 dark:text-gray-300 hover:text-primary" data-tab="tool4">文本去重</button>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8">
+            <!-- 工具1：文本转换 -->
+            <div id="tool1" class="tab-content">
+                <div class="mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="flex items-center gap-2">
+                                <label for="delimiter" class="text-sm">分隔符：</label>
+                                <input type="text" id="delimiter" value="----" class="px-4 py-2 bg-white dark:bg-gray-700 border rounded-lg">
+                            </div>
+                            <div class="flex items-center gap-2 flex-1">
+                                <label for="format" class="text-sm">转换格式：</label>
+                                <input type="text" id="format" value="{1}----{2}----{5}" class="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border rounded-lg">
+                            </div>
+                        </div>
+                        <button onclick="convertFormat()" id="convertBtn" class="px-8 py-2.5 bg-primary text-white rounded-lg">转换格式</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-3">
+                        <textarea id="inputText" placeholder="请输入要转换的文本" class="w-full h-[60vh] p-4 bg-white dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="inputLineCount">转换前数据行数: 0</span>
+                            <button onclick="clearInput()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <textarea id="outputText" placeholder="转换后的文本" readonly class="w-full h-[60vh] p-4 bg-gray-50 dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="outputLineCount">转换后数据行数: 0</span>
+                            <button onclick="clearOutput()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具2：文本合并 -->
+            <div id="tool2" class="tab-content hidden">
+                <div class="mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 flex-1">
+                            <label for="mergeDelimiter" class="text-sm">合并分隔符：</label>
+                            <input type="text" id="mergeDelimiter" value="----" class="w-[200px] px-4 py-2 bg-white dark:bg-gray-700 border rounded-lg">
+                        </div>
+                        <button onclick="mergeTexts()" id="mergeBtn" class="px-8 py-2.5 bg-primary text-white rounded-lg">合并文本</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-3">
+                        <textarea id="inputText1" placeholder="第一段文本" class="w-full h-[60vh] p-4 bg-white dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="inputLineCount1">数据行数: 0</span>
+                            <button onclick="clearMergeText1()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <textarea id="inputText2" placeholder="第二段文本" class="w-full h-[60vh] p-4 bg-white dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="inputLineCount2">数据行数: 0</span>
+                            <button onclick="clearMergeText2()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <textarea id="mergeOutput" placeholder="合并结果" readonly class="w-full h-[60vh] p-4 bg-gray-50 dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="mergeLineCount">数据行数: 0</span>
+                            <button onclick="clearMergeResult()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具3：文本打乱 -->
+            <div id="tool3" class="tab-content hidden">
+                <div class="flex justify-end mb-8">
+                    <button onclick="shuffleText()" id="shuffleBtn" class="px-8 py-2.5 bg-primary text-white rounded-lg">打乱文本</button>
+                </div>
+                <div class="space-y-3">
+                    <textarea id="shuffleText" placeholder="请输入要打乱的文本" class="w-full h-[60vh] p-4 bg-white dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                    <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                        <span id="shuffleLineCount">数据行数: 0</span>
+                        <button onclick="clearShuffleText()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具4：文本去重 -->
+            <div id="tool4" class="tab-content hidden">
+                <div class="mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="uniqueOnly" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                            <label for="uniqueOnly" class="text-sm">仅保留不重复项</label>
+                        </div>
+                        <button onclick="deduplicateText()" id="deduplicateBtn" class="px-8 py-2.5 bg-primary text-white rounded-lg">去重处理</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-3">
+                        <textarea id="deduplicateInput" placeholder="请输入要去重的文本" class="w-full h-[60vh] p-4 bg-white dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="deduplicateInputCount">原始数据行数: 0</span>
+                            <button onclick="clearDeduplicateInput()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <textarea id="duplicateText" placeholder="重复的文本" readonly class="w-full h-[60vh] p-4 bg-gray-50 dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="duplicateTextCount">重复项数据行数: 0</span>
+                            <button onclick="clearDuplicateText()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <textarea id="uniqueText" placeholder="去重后的文本" readonly class="w-full h-[60vh] p-4 bg-gray-50 dark:bg-gray-700 border rounded-xl font-mono"></textarea>
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span id="uniqueTextCount">去重后数据行数: 0</span>
+                            <button onclick="clearUniqueText()" class="px-4 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 rounded-lg">清空</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl bg-gray-800/90 text-white hidden shadow-lg"></div>
+
+    <script src="main.js"></script>
+</body>
+</html>
